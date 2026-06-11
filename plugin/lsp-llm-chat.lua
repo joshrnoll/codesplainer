@@ -24,5 +24,9 @@ vim.api.nvim_create_user_command("LspLLMChatClear", function()
 end, { desc = "Clear the persistent LSP LLM Chat conversation" })
 
 vim.api.nvim_create_user_command("LspLLMChat", function(opts)
-  require("lsp-llm-chat").chat(opts.args)
-end, { nargs = "+", desc = "Send a direct message to LSP LLM Chat" })
+  if opts.args == "" then
+    require("lsp-llm-chat").show()
+  else
+    require("lsp-llm-chat").chat(opts.args)
+  end
+end, { nargs = "*", desc = "Show chat or send a direct message to LSP LLM Chat" })

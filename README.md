@@ -58,6 +58,7 @@ Then type at the bottom prompt and press `<Enter>`.
 Other commands:
 
 ```vim
+:LspLLMChat        " show/reopen chat
 :LspLLMChatHide
 :LspLLMChatClear
 :LspLLMChat hello from command mode
