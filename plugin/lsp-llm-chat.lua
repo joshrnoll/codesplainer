@@ -13,18 +13,16 @@ end, {
 
 vim.api.nvim_create_user_command("LspLLMChatShow", function()
   require("lsp-llm-chat").show()
-end, {
-  desc = "Show the persistent LSP LLM Chat window",
-})
+end, { desc = "Show the persistent LSP LLM Chat window" })
 
 vim.api.nvim_create_user_command("LspLLMChatHide", function()
-  require("lsp-llm-chat.window").hide()
-end, {
-  desc = "Hide the LSP LLM Chat window",
-})
+  require("lsp-llm-chat").hide()
+end, { desc = "Hide the LSP LLM Chat window" })
 
 vim.api.nvim_create_user_command("LspLLMChatClear", function()
   require("lsp-llm-chat").clear()
-end, {
-  desc = "Clear the persistent LSP LLM Chat conversation",
-})
+end, { desc = "Clear the persistent LSP LLM Chat conversation" })
+
+vim.api.nvim_create_user_command("LspLLMChat", function(opts)
+  require("lsp-llm-chat").chat(opts.args)
+end, { nargs = "+", desc = "Send a direct message to LSP LLM Chat" })

@@ -2,7 +2,11 @@ local config = require("lsp-llm-chat.config")
 
 local M = {}
 
-local state = { bufnr = nil, winid = nil }
+local state = {
+  bufnr = nil,
+  winid = nil,
+  input_start = nil,
+}
 
 local function valid_window()
   return state.winid and vim.api.nvim_win_is_valid(state.winid)
@@ -12,15 +16,17 @@ local function valid_buffer()
   return state.bufnr and vim.api.nvim_buf_is_valid(state.bufnr)
 end
 
-local function configure_buffer(bufnr)
-  vim.bo[bufnr].buftype = "nofile"
-  vim.bo[bufnr].bufhidden = "hide"
-  vim.bo[bufnr].swapfile = false
-  vim.bo[bufnr].filetype = config.options.window.filetype
-  vim.keymap.set("n", "q", M.hide, { buffer = bufnr, silent = true, desc = "Hide LSP LLM Chat" })
-  vim.keymap.set({ "n", "i" }, "<CR>", function()
-    require("lsp-llm-chat").submit()
-  end, { buffer = bufnr, silent = true, desc = "Send LSP LLM Chat message" })
+local function normalize_lines(lines)
+  local normalized = {}
+  for _, line in ipairs(lines or {}) do
+    local parts = vim.split(tostring(line), "\n", { plain = true })
+    vim.list_extend(normalized, parts)
+  end
+  return normalized
+end
+
+local function set_modifiable(bufnr, value)
+  vim.bo[bufnr].modifiable = value
 end
 
 local function window_width()
@@ -29,6 +35,19 @@ local function window_width()
     return math.max(20, math.floor(vim.o.columns * width))
   end
   return width
+end
+
+local function configure_buffer(bufnr)
+  vim.bo[bufnr].buftype = "nofile"
+  vim.bo[bufnr].bufhidden = "hide"
+  vim.bo[bufnr].swapfile = false
+  vim.bo[bufnr].filetype = config.options.window.filetype
+  vim.keymap.set("n", "q", function()
+    M.hide()
+  end, { buffer = bufnr, silent = true, desc = "Hide LSP LLM Chat" })
+  vim.keymap.set({ "n", "i" }, "<CR>", function()
+    require("lsp-llm-chat").submit()
+  end, { buffer = bufnr, silent = true, desc = "Send LSP LLM Chat message" })
 end
 
 function M.open()
@@ -59,10 +78,9 @@ function M.show()
 end
 
 function M.hide()
-  if not valid_window() then
-    return
+  if valid_window() then
+    vim.api.nvim_win_close(state.winid, false)
   end
-  vim.api.nvim_win_close(state.winid, false)
   state.winid = nil
 end
 
@@ -70,81 +88,68 @@ function M.is_empty()
   if not valid_buffer() then
     return true
   end
-  local line_count = vim.api.nvim_buf_line_count(state.bufnr)
-  return line_count == 1 and vim.api.nvim_buf_get_lines(state.bufnr, 0, 1, false)[1] == ""
+  local lines = vim.api.nvim_buf_get_lines(state.bufnr, 0, -1, false)
+  return #lines == 0 or (#lines == 1 and lines[1] == "")
 end
 
-local function normalize_lines(lines)
-  local normalized = {}
-  for _, line in ipairs(lines) do
-    if type(line) ~= "string" then
-      line = tostring(line)
-    end
-    local parts = vim.split(line, "\n", { plain = true })
-    vim.list_extend(normalized, parts)
-  end
-  return normalized
-end
-
-function M.set_lines(lines)
+function M.replace(lines)
   local bufnr = M.open()
-  vim.bo[bufnr].modifiable = true
+  set_modifiable(bufnr, true)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, normalize_lines(lines))
-  vim.bo[bufnr].modifiable = false
+  set_modifiable(bufnr, false)
+  state.input_start = nil
 end
 
 function M.append(lines)
   local bufnr = M.open()
-  vim.bo[bufnr].modifiable = true
+  set_modifiable(bufnr, true)
   vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, normalize_lines(lines))
-  vim.bo[bufnr].modifiable = false
+  set_modifiable(bufnr, false)
   local line_count = vim.api.nvim_buf_line_count(bufnr)
   vim.api.nvim_win_set_cursor(state.winid, { line_count, 0 })
 end
 
-function M.remove_last_line_if(pattern)
+function M.remove_last_nonblank_matching(pattern)
   local bufnr = M.open()
-  local line_count = vim.api.nvim_buf_line_count(bufnr)
-  if line_count == 0 then
-    return
-  end
-
-  local target = line_count
-  while target > 0 do
-    local line = vim.api.nvim_buf_get_lines(bufnr, target - 1, target, false)[1] or ""
+  for row = vim.api.nvim_buf_line_count(bufnr), 1, -1 do
+    local line = vim.api.nvim_buf_get_lines(bufnr, row - 1, row, false)[1] or ""
     if line ~= "" then
-      if not line:match(pattern) then
-        return
+      if line:match(pattern) then
+        set_modifiable(bufnr, true)
+        vim.api.nvim_buf_set_lines(bufnr, row - 1, row, false, {})
+        set_modifiable(bufnr, false)
       end
-      vim.bo[bufnr].modifiable = true
-      vim.api.nvim_buf_set_lines(bufnr, target - 1, target, false, {})
-      vim.bo[bufnr].modifiable = false
       return
     end
-    target = target - 1
   end
 end
 
-function M.prompt()
+function M.start_prompt()
   local bufnr = M.open()
-  vim.bo[bufnr].modifiable = true
+  set_modifiable(bufnr, true)
   vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, { "", "## You", "", "" })
-  local line_count = vim.api.nvim_buf_line_count(bufnr)
-  vim.api.nvim_win_set_cursor(state.winid, { line_count, 0 })
+  state.input_start = vim.api.nvim_buf_line_count(bufnr)
+  vim.api.nvim_win_set_cursor(state.winid, { state.input_start, 0 })
   vim.cmd("startinsert")
 end
 
-function M.submit_line()
+function M.finish_prompt()
   local bufnr = M.open()
-  local row = vim.api.nvim_win_get_cursor(state.winid)[1]
-  local line = vim.api.nvim_buf_get_lines(bufnr, row - 1, row, false)[1] or ""
-  line = vim.trim(line)
-  if line == "" then
+  if not state.input_start then
     return nil
   end
+
+  local last = vim.api.nvim_buf_line_count(bufnr)
+  local lines = vim.api.nvim_buf_get_lines(bufnr, state.input_start - 1, last, false)
+  local text = vim.trim(table.concat(lines, "\n"))
+  if text == "" then
+    return nil
+  end
+
   vim.cmd("stopinsert")
-  vim.bo[bufnr].modifiable = false
-  return line
+  set_modifiable(bufnr, false)
+  state.input_start = nil
+  return text
 end
 
 return M

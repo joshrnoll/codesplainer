@@ -1,74 +1,66 @@
 # lsp-llm-chat.nvim
 
-A small Neovim plugin for asking an LLM about a visual selection while giving it LSP-powered code context.
+Persistent Neovim chat for asking an OpenRouter-backed LLM about code selections with LSP-powered context traversal.
 
-- Ask about highlighted code from visual mode
-- Opens the chat in a vertical split
-- Collects LSP context: hover, definitions, type definitions, implementations, references, diagnostics, and document symbols
-- Supports iterative LSP tool requests from the model
-- Uses OpenRouter as the LLM provider
+## Features
+
+- Persistent vertical chat split
+- Direct chat inside the split: type at the bottom and press `<Enter>`
+- Visual selection asks with LSP context
+- LSP traversal tools: hover, definition, type definition, implementation, references, diagnostics, symbols, snippets
+- OpenRouter provider
+- Markdown response formatting for headings, code fences, lists, blockquotes, tables, math, directives, HTML-ish blocks, and more
 
 ## Requirements
 
 - Neovim 0.9+
 - `curl`
-- A configured Neovim LSP client for the target buffer
-- An OpenRouter API key in `OPENROUTER_API_KEY`
+- A configured Neovim LSP client for code context
+- OpenRouter API key in `OPENROUTER_API_KEY`
 
 ## Installation
 
-Use your plugin manager of choice. With lazy.nvim:
+With lazy.nvim:
 
 ```lua
 {
-  "yourname/lsp-llm-chat.nvim",
-  config = function()
-    require("lsp-llm-chat").setup({
-      openrouter = {
-        model = "anthropic/claude-3.5-sonnet",
-      },
-    })
-  end,
+  dir = vim.fn.expand("~/prototypes/lsp-enabled-llm-chat-nvim-plugin/.worktrees/rebuild"),
+  name = "lsp-llm-chat.nvim",
+  cmd = { "LspLLMChatAsk", "LspLLMChatShow", "LspLLMChatHide", "LspLLMChatClear", "LspLLMChat" },
+  keys = {
+    { "<leader>la", ":LspLLMChatAsk ", mode = "v", desc = "Ask LLM about selection" },
+    { "<leader>ls", "<Cmd>LspLLMChatShow<CR>", mode = "n", desc = "Show LSP LLM chat" },
+  },
+  opts = {
+    openrouter = {
+      model = "google/gemini-3.1-flash-lite",
+    },
+  },
 }
-```
-
-For local development:
-
-```lua
-vim.opt.runtimepath:append("/path/to/lsp-enabled-llm-chat-nvim-plugin")
-require("lsp-llm-chat").setup()
 ```
 
 ## Usage
 
-Highlight code in visual mode and run:
+Visual-select code and run:
 
 ```vim
-:'<,'>LspLLMChatAsk
+:'<,'>LspLLMChatAsk Why does this fail?
 ```
 
-You can also pass the question directly:
+Open/reopen the persistent chat:
 
 ```vim
-:'<,'>LspLLMChatAsk Why is this function failing?
+:LspLLMChatShow
 ```
 
-The answer appears in a persistent vertical chat split. Each new visual ask appends to the same conversation, so the model can use prior turns as context.
+Then type at the bottom prompt and press `<Enter>`.
 
-You can also chat directly in the split: type on the prompt line at the bottom and press `<Enter>` to send.
+Other commands:
 
-Window commands:
-
-- `q` in the chat split or `:LspLLMChatHide` hides the split without deleting the chat
-- `:LspLLMChatShow` reopens the existing chat and prompt
-- `:LspLLMChatClear` clears the conversation
-
-Default mappings are intentionally not installed. Add your own:
-
-```lua
-vim.keymap.set("v", "<leader>la", function()
-  require("lsp-llm-chat").ask_visual()
-end, { desc = "Ask LLM about selection" })
+```vim
+:LspLLMChatHide
+:LspLLMChatClear
+:LspLLMChat hello from command mode
 ```
 
 ## Configuration
@@ -78,18 +70,16 @@ require("lsp-llm-chat").setup({
   provider = "openrouter",
   max_tool_rounds = 4,
   window = {
-    width = 80, -- fixed columns; use 0.25 for 25% of screen width
+    width = 80, -- columns; use 0.25 for 25% of screen width
     filetype = "markdown",
-  }
+  },
   openrouter = {
     api_key = nil, -- defaults to os.getenv("OPENROUTER_API_KEY")
     api_key_env = "OPENROUTER_API_KEY",
-    model = "anthropic/claude-3.5-sonnet",
+    model = "google/gemini-3.1-flash-lite",
     endpoint = "https://openrouter.ai/api/v1/chat/completions",
     temperature = 0.2,
     max_tokens = 4000,
-    site_url = nil,
-    app_name = "lsp-llm-chat.nvim",
   },
 })
 ```
@@ -99,17 +89,3 @@ require("lsp-llm-chat").setup({
 ```sh
 make test
 ```
-
-## LSP traversal protocol
-
-The plugin gives the model a context bundle up front. It also supports iterative tool calls. If the model needs more context it can respond with a fenced JSON block:
-
-````markdown
-```lsp-tool
-{"tool":"definition","file":"/abs/file.lua","line":10,"character":4}
-```
-````
-
-Supported tools: `hover`, `definition`, `typeDefinition`, `implementation`, `references`, `diagnostics`, `symbols`, `snippet`.
-
-The plugin executes the request through Neovim's LSP APIs, appends the result, and asks the model again until it returns a final answer or `max_tool_rounds` is reached.
