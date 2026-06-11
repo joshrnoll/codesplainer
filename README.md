@@ -28,8 +28,8 @@ With lazy.nvim:
   name = "codesplainer.nvim",
   cmd = { "CodesplainerAsk", "CodesplainerClear", "Codesplainer" },
   keys = {
-    { "<leader>la", ":CodesplainerAsk ", mode = "v", desc = "Ask Codesplainer about selection" },
-    { "<leader>ls", "<Cmd>Codesplainer<CR>", mode = "n", desc = "Toggle Codesplainer" },
+    { "<leader>ca", "<Cmd>CodesplainerAsk<CR>", mode = "v", desc = "Ask Codesplainer about selection" },
+    { "<leader>ct", "<Cmd>Codesplainer<CR>", mode = "n", desc = "Toggle Codesplainer" },
   },
   opts = {
     openai = {
