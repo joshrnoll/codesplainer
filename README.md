@@ -24,7 +24,7 @@ With lazy.nvim:
 
 ```lua
 {
-  dir = vim.fn.expand("~/prototypes/codesplainer.nvim"),
+  url = "https://github.com/joshrnoll/codesplainer",
   name = "codesplainer.nvim",
   cmd = { "CodesplainerAsk", "CodesplainerShow", "CodesplainerHide", "CodesplainerClear", "Codesplainer" },
   keys = {
