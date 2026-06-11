@@ -1,4 +1,4 @@
-local config = require("lsp-llm-chat.config")
+local config = require("codesplainer.config")
 
 local M = {}
 
@@ -44,10 +44,10 @@ local function configure_buffer(bufnr)
   vim.bo[bufnr].filetype = config.options.window.filetype
   vim.keymap.set("n", "q", function()
     M.hide()
-  end, { buffer = bufnr, silent = true, desc = "Hide LSP LLM Chat" })
+  end, { buffer = bufnr, silent = true, desc = "Hide Codesplainer" })
   vim.keymap.set({ "n", "i" }, "<CR>", function()
-    require("lsp-llm-chat").submit()
-  end, { buffer = bufnr, silent = true, desc = "Send LSP LLM Chat message" })
+    require("codesplainer").submit()
+  end, { buffer = bufnr, silent = true, desc = "Send Codesplainer message" })
 end
 
 function M.open()
@@ -64,7 +64,7 @@ function M.open()
     vim.api.nvim_win_set_buf(state.winid, state.bufnr)
   else
     state.bufnr = vim.api.nvim_get_current_buf()
-    vim.api.nvim_buf_set_name(state.bufnr, "LSP LLM Chat")
+    vim.api.nvim_buf_set_name(state.bufnr, "Codesplainer")
     configure_buffer(state.bufnr)
   end
 

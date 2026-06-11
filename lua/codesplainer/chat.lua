@@ -1,12 +1,13 @@
-local config = require("lsp-llm-chat.config")
-local lsp = require("lsp-llm-chat.lsp")
-local markdown = require("lsp-llm-chat.markdown")
-local window = require("lsp-llm-chat.window")
+local config = require("codesplainer.config")
+local lsp = require("codesplainer.lsp")
+local markdown = require("codesplainer.markdown")
+local window = require("codesplainer.window")
 
 local M = {}
 
 local SYSTEM_PROMPT = [[
-You are an expert coding assistant inside Neovim. The user may ask directly or about selected code.
+You are an expert code-reading assistant inside Neovim. The user may ask directly or about selected code.
+Your job is to help the user read, navigate, and understand existing code. Do not write new code, generate patches, implement features, or provide copy-paste replacement code. If the user asks for code-writing help, politely redirect to explaining how the existing code works, where relevant logic lives, or what the user should inspect next.
 Use provided LSP context. If more code context is needed, request exactly one tool call by replying only with:
 ```lsp-tool
 {"tool":"definition","file":"/absolute/path","line":10,"character":4}
@@ -23,7 +24,7 @@ local state = {
 
 local function provider()
   if config.options.provider == "openrouter" then
-    return require("lsp-llm-chat.providers.openrouter")
+    return require("codesplainer.providers.openrouter")
   end
   error("Unknown provider: " .. tostring(config.options.provider))
 end
@@ -38,9 +39,9 @@ local function ensure_window()
   ensure_messages()
   if window.is_empty() then
     window.replace({
-      "# LSP LLM Chat",
+      "# Codesplainer",
       "",
-      "Persistent chat. Type at the bottom and press Enter. Visual-select code and run `:LspLLMChatAsk` to include LSP context.",
+      "Persistent chat. Type at the bottom and press Enter. Visual-select code and run `:CodesplainerAsk` to include LSP context.",
     })
     window.start_prompt()
   else
@@ -168,7 +169,7 @@ end
 function M.clear()
   state.messages = { { role = "system", content = SYSTEM_PROMPT } }
   state.busy = false
-  window.replace({ "# LSP LLM Chat", "", "Chat cleared." })
+  window.replace({ "# Codesplainer", "", "Chat cleared." })
   window.start_prompt()
 end
 

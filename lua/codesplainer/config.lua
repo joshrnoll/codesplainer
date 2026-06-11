@@ -19,7 +19,7 @@ M.defaults = {
     temperature = 0.2,
     max_tokens = 4000,
     site_url = nil,
-    app_name = "lsp-llm-chat.nvim",
+    app_name = "codesplainer.nvim",
   },
 }
 

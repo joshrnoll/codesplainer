@@ -1,4 +1,4 @@
-# lsp-llm-chat.nvim
+# codesplainer.nvim
 
 Persistent Neovim chat for asking an OpenRouter-backed LLM about code selections with LSP-powered context traversal.
 
@@ -24,12 +24,12 @@ With lazy.nvim:
 
 ```lua
 {
-  dir = vim.fn.expand("~/prototypes/lsp-enabled-llm-chat-nvim-plugin/.worktrees/rebuild"),
-  name = "lsp-llm-chat.nvim",
-  cmd = { "LspLLMChatAsk", "LspLLMChatShow", "LspLLMChatHide", "LspLLMChatClear", "LspLLMChat" },
+  dir = vim.fn.expand("~/prototypes/codesplainer.nvim"),
+  name = "codesplainer.nvim",
+  cmd = { "CodesplainerAsk", "CodesplainerShow", "CodesplainerHide", "CodesplainerClear", "Codesplainer" },
   keys = {
-    { "<leader>la", ":LspLLMChatAsk ", mode = "v", desc = "Ask LLM about selection" },
-    { "<leader>ls", "<Cmd>LspLLMChatShow<CR>", mode = "n", desc = "Show LSP LLM chat" },
+    { "<leader>la", ":CodesplainerAsk ", mode = "v", desc = "Ask Codesplainer about selection" },
+    { "<leader>ls", "<Cmd>CodesplainerShow<CR>", mode = "n", desc = "Show Codesplainer" },
   },
   opts = {
     openrouter = {
@@ -44,13 +44,13 @@ With lazy.nvim:
 Visual-select code and run:
 
 ```vim
-:'<,'>LspLLMChatAsk Why does this fail?
+:'<,'>CodesplainerAsk Why does this fail?
 ```
 
 Open/reopen the persistent chat:
 
 ```vim
-:LspLLMChatShow
+:CodesplainerShow
 ```
 
 Then type at the bottom prompt and press `<Enter>`.
@@ -58,16 +58,16 @@ Then type at the bottom prompt and press `<Enter>`.
 Other commands:
 
 ```vim
-:LspLLMChat        " show/reopen chat
-:LspLLMChatHide
-:LspLLMChatClear
-:LspLLMChat hello from command mode
+:Codesplainer        " show/reopen chat
+:CodesplainerHide
+:CodesplainerClear
+:Codesplainer hello from command mode
 ```
 
 ## Configuration
 
 ```lua
-require("lsp-llm-chat").setup({
+require("codesplainer").setup({
   provider = "openrouter",
   max_tool_rounds = 4,
   window = {

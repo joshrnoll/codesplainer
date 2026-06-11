@@ -1,6 +1,6 @@
 vim.opt.runtimepath:prepend(vim.fn.getcwd())
 
-local markdown = require("lsp-llm-chat.markdown")
+local markdown = require("codesplainer.markdown")
 
 local failures = 0
 

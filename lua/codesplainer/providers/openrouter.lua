@@ -1,4 +1,4 @@
-local config = require("lsp-llm-chat.config")
+local config = require("codesplainer.config")
 
 local M = {}
 

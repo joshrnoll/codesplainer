@@ -1,7 +1,7 @@
-local chat = require("lsp-llm-chat.chat")
-local config = require("lsp-llm-chat.config")
-local lsp = require("lsp-llm-chat.lsp")
-local window = require("lsp-llm-chat.window")
+local chat = require("codesplainer.chat")
+local config = require("codesplainer.config")
+local lsp = require("codesplainer.lsp")
+local window = require("codesplainer.window")
 
 local M = {}
 
