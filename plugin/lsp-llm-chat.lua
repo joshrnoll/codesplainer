@@ -1,0 +1,30 @@
+if vim.g.loaded_lsp_llm_chat == 1 then
+  return
+end
+vim.g.loaded_lsp_llm_chat = 1
+
+vim.api.nvim_create_user_command("LspLLMChatAsk", function(opts)
+  require("lsp-llm-chat").ask_visual(opts.args)
+end, {
+  range = true,
+  nargs = "*",
+  desc = "Ask an LLM about the current visual selection with LSP context",
+})
+
+vim.api.nvim_create_user_command("LspLLMChatShow", function()
+  require("lsp-llm-chat").show()
+end, {
+  desc = "Show the persistent LSP LLM Chat window",
+})
+
+vim.api.nvim_create_user_command("LspLLMChatHide", function()
+  require("lsp-llm-chat.window").hide()
+end, {
+  desc = "Hide the LSP LLM Chat window",
+})
+
+vim.api.nvim_create_user_command("LspLLMChatClear", function()
+  require("lsp-llm-chat").clear()
+end, {
+  desc = "Clear the persistent LSP LLM Chat conversation",
+})
