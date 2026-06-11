@@ -1,7 +1,7 @@
 local M = {}
 
 M.defaults = {
-  provider = "openrouter",
+  provider = "openai",
   max_tool_rounds = 4,
   window = {
     width = 80,
@@ -11,11 +11,11 @@ M.defaults = {
     max_references = 12,
     max_snippet_lines = 80,
   },
-  openrouter = {
+  openai = {
     api_key = nil,
-    api_key_env = "OPENROUTER_API_KEY",
-    model = "google/gemini-3.1-flash-lite",
-    endpoint = "https://openrouter.ai/api/v1/chat/completions",
+    api_key_env = "OPENAI_API_KEY",
+    model = "gpt-4.1-mini",
+    endpoint = "https://api.openai.com/v1/chat/completions",
     temperature = 0.2,
     max_tokens = 4000,
     site_url = nil,

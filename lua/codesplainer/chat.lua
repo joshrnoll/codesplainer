@@ -23,8 +23,8 @@ local state = {
 }
 
 local function provider()
-  if config.options.provider == "openrouter" then
-    return require("codesplainer.providers.openrouter")
+  if config.options.provider == "openai" then
+    return require("codesplainer.providers.openai")
   end
   error("Unknown provider: " .. tostring(config.options.provider))
 end

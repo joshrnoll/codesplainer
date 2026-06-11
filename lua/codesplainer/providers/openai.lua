@@ -23,18 +23,18 @@ end
 local function decode_response(http_code, body)
   local code = tonumber(http_code)
   if not code or code < 200 or code >= 300 then
-    return nil, "OpenRouter HTTP " .. tostring(http_code) .. ":\n" .. (body or "")
+    return nil, "OpenAI-compatible API HTTP " .. tostring(http_code) .. ":\n" .. (body or "")
   end
 
   local ok, decoded = pcall(vim.fn.json_decode, body or "")
   if not ok then
-    return nil, "Could not decode OpenRouter response:\n" .. (body or "")
+    return nil, "Could not decode OpenAI-compatible API response:\n" .. (body or "")
   end
 
   local choice = decoded.choices and decoded.choices[1]
   local content = choice and choice.message and choice.message.content
   if not content then
-    return nil, "OpenRouter response did not include message content:\n" .. (body or "")
+    return nil, "OpenAI-compatible API response did not include message content:\n" .. (body or "")
   end
   return content, nil
 end
@@ -50,10 +50,10 @@ local function curl_command(opts, key, body_file)
 end
 
 function M.complete(messages, callback)
-  local opts = config.options.openrouter
+  local opts = config.options.openai
   local key = api_key(opts)
   if not key or key == "" then
-    callback(nil, "Missing OpenRouter API key. Set " .. opts.api_key_env .. " or pass openrouter.api_key.")
+    callback(nil, "Missing OpenAI-compatible API key. Set " .. opts.api_key_env .. " or pass openai.api_key.")
     return
   end
 
