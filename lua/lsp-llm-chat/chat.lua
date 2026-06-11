@@ -153,7 +153,9 @@ local function send_user_message(message, display_lines)
   end
 
   table.insert(state.messages, { role = "user", content = message })
-  append_section("You", display_lines)
+  if display_lines then
+    append_section("You", display_lines)
+  end
   append_section("Assistant", { "_Thinking..._" })
   state.busy = true
   request_round(0)
@@ -173,7 +175,8 @@ end
 function M.submit_prompt()
   local text = window.finish_prompt()
   if text then
-    send_user_message(text, vim.split(text, "\n", { plain = true }))
+    -- The prompt text is already rendered in the chat buffer; don't append a duplicate "You" section.
+    send_user_message(text, nil)
   end
 end
 
