@@ -166,6 +166,14 @@ function M.show()
   ensure_window()
 end
 
+function M.toggle()
+  if window.is_open() then
+    window.hide()
+  else
+    ensure_window()
+  end
+end
+
 function M.clear()
   state.messages = { { role = "system", content = SYSTEM_PROMPT } }
   state.busy = false

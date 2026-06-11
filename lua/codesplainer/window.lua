@@ -77,6 +77,10 @@ function M.show()
   return M.open()
 end
 
+function M.is_open()
+  return valid_window()
+end
+
 function M.hide()
   if valid_window() then
     vim.api.nvim_win_close(state.winid, false)

@@ -26,10 +26,10 @@ With lazy.nvim:
 {
   url = "https://github.com/joshrnoll/codesplainer",
   name = "codesplainer.nvim",
-  cmd = { "CodesplainerAsk", "CodesplainerShow", "CodesplainerHide", "CodesplainerClear", "Codesplainer" },
+  cmd = { "CodesplainerAsk", "CodesplainerClear", "Codesplainer" },
   keys = {
     { "<leader>la", ":CodesplainerAsk ", mode = "v", desc = "Ask Codesplainer about selection" },
-    { "<leader>ls", "<Cmd>CodesplainerShow<CR>", mode = "n", desc = "Show Codesplainer" },
+    { "<leader>ls", "<Cmd>Codesplainer<CR>", mode = "n", desc = "Toggle Codesplainer" },
   },
   opts = {
     openai = {
@@ -47,10 +47,10 @@ Visual-select code and run:
 :'<,'>CodesplainerAsk Why does this fail?
 ```
 
-Open/reopen the persistent chat:
+Toggle the persistent chat:
 
 ```vim
-:CodesplainerShow
+:Codesplainer
 ```
 
 Then type at the bottom prompt and press `<Enter>`.
@@ -58,8 +58,7 @@ Then type at the bottom prompt and press `<Enter>`.
 Other commands:
 
 ```vim
-:Codesplainer        " show/reopen chat
-:CodesplainerHide
+:Codesplainer        " toggle chat open/closed
 :CodesplainerClear
 :Codesplainer hello from command mode
 ```

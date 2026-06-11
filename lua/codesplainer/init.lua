@@ -17,6 +17,10 @@ function M.hide()
   window.hide()
 end
 
+function M.toggle()
+  chat.toggle()
+end
+
 function M.clear()
   chat.clear()
 end
