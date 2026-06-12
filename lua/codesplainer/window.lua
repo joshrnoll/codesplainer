@@ -45,7 +45,7 @@ local function configure_buffer(bufnr)
   vim.keymap.set("n", "q", function()
     M.hide()
   end, { buffer = bufnr, silent = true, desc = "Hide Codesplainer" })
-  vim.keymap.set({ "n", "i" }, "<CR>", function()
+  vim.keymap.set("n", "<CR>", function()
     require("codesplainer").submit()
   end, { buffer = bufnr, silent = true, desc = "Send Codesplainer message" })
 end

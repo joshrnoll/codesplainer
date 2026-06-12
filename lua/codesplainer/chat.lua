@@ -44,7 +44,7 @@ local function ensure_window()
     window.replace({
       "# Codesplainer",
       "",
-      "Persistent chat. Type at the bottom and press Enter. Visual-select code and run `:CodesplainerAsk` to include LSP context.",
+      "Persistent chat. Type at the bottom; press Enter in normal mode to send. Visual-select code and run `:CodesplainerAsk` to include LSP context.",
     })
     window.start_prompt()
   else
@@ -160,7 +160,7 @@ local function send_user_message(message, display_lines)
   if display_lines then
     append_section("You", display_lines)
   end
-  append_section("Assistant", { "_Thinking..._" })
+  append_section("Codesplainer", { "_Thinking..._" })
   state.busy = true
   request_round(0)
 end
