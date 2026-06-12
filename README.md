@@ -1,6 +1,12 @@
 # codesplainer.nvim
 
-Persistent Neovim chat for reading and understanding code with LSP-powered context traversal, any OpenAI-compatible chat completions API, or a ChatGPT Plus/Pro Codex subscription.
+Codesplainer is an LLM-based Neovim chat for reading and understanding code with LSP-powered context traversal. It supports OpenAI-compatible chat completions APIs and ChatGPT Plus/Pro Codex subscriptions.
+
+## _Why not just use Claude Code, Codex, OpenCode, etc.?_
+
+If you're still using Neovim, chances are you use it to read code. Instead of copy/pasting into another terminal window, tmux pane, or browser, Codesplainer lets you ask questions directly inside Neovim.
+
+Codesplainer has no writable tools. It only has the context it needs to answer questions about the code you're reading.
 
 ## Features
 
@@ -66,10 +72,10 @@ Other commands:
 
 Codesplainer supports two provider modes:
 
-| Provider | Use case | Auth |
-| --- | --- | --- |
-| `codex` | ChatGPT Plus/Pro Codex subscription | Browser OAuth |
-| `openai` | OpenAI-compatible Chat Completions APIs, including OpenAI and OpenRouter | API key |
+| Provider | Use case                                                                 | Auth          |
+| -------- | ------------------------------------------------------------------------ | ------------- |
+| `codex`  | ChatGPT Plus/Pro Codex subscription                                      | Browser OAuth |
+| `openai` | OpenAI-compatible Chat Completions APIs, including OpenAI and OpenRouter | API key       |
 
 Set the active provider with `provider = "codex"` or `provider = "openai"`.
 
