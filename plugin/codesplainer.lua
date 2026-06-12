@@ -4,7 +4,7 @@ end
 vim.g.loaded_codesplainer = 1
 
 vim.api.nvim_create_user_command("CodesplainerAsk", function(opts)
-  require("codesplainer").ask_visual(opts.args)
+  require("codesplainer").ask_visual(opts.args, opts)
 end, {
   range = true,
   nargs = "*",

@@ -121,16 +121,78 @@ local function bufnr_for_file(path)
   return bufnr
 end
 
-function M.visual_selection()
-  local bufnr = vim.api.nvim_get_current_buf()
-  local start_pos = vim.fn.getpos("'<")
-  local end_pos = vim.fn.getpos("'>")
-  local srow, scol = start_pos[2], start_pos[3]
-  local erow, ecol = end_pos[2], end_pos[3]
+local function normalize_selection(srow, scol, erow, ecol)
   if srow > erow or (srow == erow and scol > ecol) then
     srow, erow = erow, srow
     scol, ecol = ecol, scol
   end
+  return srow, scol, erow, ecol
+end
+
+local function visual_mark_positions()
+  local start_pos = vim.fn.getpos("'<")
+  local end_pos = vim.fn.getpos("'>")
+  local srow, scol = start_pos[2], start_pos[3]
+  local erow, ecol = end_pos[2], end_pos[3]
+  if srow <= 0 or erow <= 0 then
+    return nil
+  end
+  return normalize_selection(srow, scol, erow, ecol)
+end
+
+local function active_visual_positions()
+  local mode = vim.fn.mode()
+  if mode ~= "v" and mode ~= "V" and mode ~= "\22" then
+    return nil
+  end
+
+  local start_pos = vim.fn.getpos("v")
+  local end_pos = vim.fn.getcurpos()
+  local srow, scol = start_pos[2], start_pos[3]
+  local erow, ecol = end_pos[2], end_pos[3]
+  if srow <= 0 or erow <= 0 then
+    return nil
+  end
+  if mode == "V" then
+    scol = 1
+    ecol = #vim.api.nvim_buf_get_lines(0, erow - 1, erow, false)[1]
+  end
+  return normalize_selection(srow, scol, erow, ecol)
+end
+
+local function range_positions(range)
+  if not range or not range.range or range.range == 0 then
+    return nil
+  end
+
+  local srow = range.line1
+  local erow = range.line2
+  if not srow or not erow or srow <= 0 or erow <= 0 then
+    return nil
+  end
+
+  local mark_srow, mark_scol, mark_erow, mark_ecol = visual_mark_positions()
+  if mark_srow == srow and mark_erow == erow then
+    return mark_srow, mark_scol, mark_erow, mark_ecol
+  end
+
+  local last_line = vim.api.nvim_buf_get_lines(0, erow - 1, erow, false)[1] or ""
+  return normalize_selection(srow, 1, erow, #last_line)
+end
+
+function M.visual_selection(range)
+  local bufnr = vim.api.nvim_get_current_buf()
+  local srow, scol, erow, ecol = active_visual_positions()
+  if not srow then
+    srow, scol, erow, ecol = range_positions(range)
+  end
+  if not srow then
+    srow, scol, erow, ecol = visual_mark_positions()
+  end
+  if not srow then
+    return nil
+  end
+
   local lines = vim.api.nvim_buf_get_lines(bufnr, srow - 1, erow, false)
   if #lines == 0 then
     return nil

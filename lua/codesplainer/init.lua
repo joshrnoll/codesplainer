@@ -33,8 +33,8 @@ function M.chat(message)
   chat.send_text(message)
 end
 
-function M.ask_visual(question)
-  local selection = lsp.visual_selection()
+function M.ask_visual(question, range)
+  local selection = lsp.visual_selection(range)
   if not selection then
     vim.notify("No visual selection found", vim.log.levels.WARN)
     return
