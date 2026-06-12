@@ -33,6 +33,10 @@ function M.chat(message)
   chat.send_text(message)
 end
 
+function M.codex_login()
+  require("codesplainer.providers.codex").login()
+end
+
 function M.ask_visual(question, range)
   local selection = lsp.visual_selection(range)
   if not selection then

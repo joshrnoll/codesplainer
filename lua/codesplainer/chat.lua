@@ -26,6 +26,9 @@ local function provider()
   if config.options.provider == "openai" then
     return require("codesplainer.providers.openai")
   end
+  if config.options.provider == "codex" then
+    return require("codesplainer.providers.codex")
+  end
   error("Unknown provider: " .. tostring(config.options.provider))
 end
 

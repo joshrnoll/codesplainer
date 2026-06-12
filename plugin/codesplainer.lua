@@ -15,6 +15,10 @@ vim.api.nvim_create_user_command("CodesplainerClear", function()
   require("codesplainer").clear()
 end, { desc = "Clear the persistent Codesplainer conversation" })
 
+vim.api.nvim_create_user_command("CodesplainerCodexLogin", function()
+  require("codesplainer").codex_login()
+end, { desc = "Authenticate Codesplainer with ChatGPT Plus/Pro Codex" })
+
 vim.api.nvim_create_user_command("Codesplainer", function(opts)
   if opts.args == "" then
     require("codesplainer").toggle()

@@ -16,6 +16,7 @@ end
 assert_true("Codesplainer command exists", vim.fn.exists(":Codesplainer") == 2)
 assert_true("CodesplainerAsk command exists", vim.fn.exists(":CodesplainerAsk") == 2)
 assert_true("CodesplainerClear command exists", vim.fn.exists(":CodesplainerClear") == 2)
+assert_true("CodesplainerCodexLogin command exists", vim.fn.exists(":CodesplainerCodexLogin") == 2)
 assert_true("CodesplainerShow command removed", vim.fn.exists(":CodesplainerShow") == 0)
 assert_true("CodesplainerHide command removed", vim.fn.exists(":CodesplainerHide") == 0)
 

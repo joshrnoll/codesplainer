@@ -21,6 +21,13 @@ M.defaults = {
     site_url = nil,
     app_name = "codesplainer.nvim",
   },
+  codex = {
+    auth_file = vim.fn.stdpath("data") .. "/codesplainer/codex_auth.json",
+    model = "gpt-5.5",
+    endpoint = "https://chatgpt.com/backend-api/codex/responses",
+    verbosity = "low",
+    reasoning_effort = nil,
+  },
 }
 
 M.options = vim.deepcopy(M.defaults)
