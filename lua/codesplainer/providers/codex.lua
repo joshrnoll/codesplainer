@@ -442,6 +442,170 @@ local function parse_sse(body)
   return text, nil
 end
 
+local function parse_sse_chunk(buffer, chunk, on_data)
+  buffer = buffer .. (chunk or "")
+  while true do
+    local newline = buffer:find("\n", 1, true)
+    if not newline then
+      break
+    end
+    local line = buffer:sub(1, newline - 1):gsub("\r$", "")
+    buffer = buffer:sub(newline + 1)
+    local data = line:match("^data:%s*(.*)$")
+    if data then
+      on_data(data)
+    end
+  end
+  return buffer
+end
+
+local function emit_stream_event(data, emit)
+  if data == "[DONE]" then
+    emit({ type = "done" })
+    return
+  end
+  local ok, event = pcall(vim.fn.json_decode, data)
+  if not ok or type(event) ~= "table" then
+    return
+  end
+  if event.type == "response.output_text.delta" and event.delta then
+    emit({ type = "text_delta", text = event.delta })
+  elseif event.type == "response.completed" then
+    emit({ type = "done" })
+  elseif event.type == "response.failed" then
+    local err = event.response and event.response.error
+    emit({ type = "error", error = "OpenAI Codex response failed: " .. vim.fn.json_encode(err or event) })
+  end
+end
+
+local function response_body(opts, messages)
+  local instructions, input = split_messages(messages)
+  local body = {
+    model = opts.model,
+    store = false,
+    stream = true,
+    instructions = instructions,
+    input = input,
+    text = { verbosity = opts.verbosity },
+    include = { "reasoning.encrypted_content" },
+    tool_choice = "auto",
+    parallel_tool_calls = true,
+  }
+  if opts.reasoning_effort then
+    body.reasoning = { effort = opts.reasoning_effort, summary = "auto" }
+  end
+  return body
+end
+
+local function response_curl_command(opts, auth, body_file)
+  return {
+    "curl",
+    "-sS",
+    "-N",
+    "--fail-with-body",
+    "-X",
+    "POST",
+    opts.endpoint,
+    "-H",
+    "Authorization: Bearer " .. auth.access,
+    "-H",
+    "chatgpt-account-id: " .. (auth.accountId or ""),
+    "-H",
+    "originator: codesplainer.nvim",
+    "-H",
+    "OpenAI-Beta: responses=experimental",
+    "-H",
+    "Accept: text/event-stream",
+    "-H",
+    "Content-Type: application/json",
+    "--data-binary",
+    "@" .. body_file,
+  }
+end
+
+function M.stream(messages, emit)
+  local handle = {
+    cancelled = false,
+    job_id = nil,
+    body_file = nil,
+  }
+
+  function handle.cancel()
+    handle.cancelled = true
+    if handle.job_id and handle.job_id > 0 then
+      pcall(vim.fn.jobstop, handle.job_id)
+    end
+    if handle.body_file then
+      pcall(vim.fn.delete, handle.body_file)
+    end
+  end
+
+  get_auth(function(auth, auth_err)
+    if handle.cancelled then
+      return
+    end
+    if auth_err then
+      emit({ type = "error", error = auth_err })
+      return
+    end
+
+    local opts = config.options.codex
+    handle.body_file = vim.fn.tempname()
+    vim.fn.writefile({ vim.fn.json_encode(response_body(opts, messages)) }, handle.body_file)
+    local cmd = response_curl_command(opts, auth, handle.body_file)
+    local stdout_buffer = ""
+    local stderr = {}
+    local completed = false
+    handle.job_id = vim.fn.jobstart(cmd, {
+      stdout_buffered = false,
+      stderr_buffered = true,
+      on_stdout = function(_, data)
+        vim.schedule(function()
+          if handle.cancelled then
+            return
+          end
+          for _, chunk in ipairs(data or {}) do
+            if chunk ~= "" then
+              stdout_buffer = parse_sse_chunk(stdout_buffer, chunk .. "\n", function(item)
+                emit_stream_event(item, function(event)
+                  if event.type == "done" then
+                    completed = true
+                  end
+                  if not handle.cancelled then
+                    emit(event)
+                  end
+                end)
+              end)
+            end
+          end
+        end)
+      end,
+      on_stderr = function(_, data)
+        for _, line in ipairs(data or {}) do
+          if line ~= "" then
+            table.insert(stderr, line)
+          end
+        end
+      end,
+      on_exit = function(_, code)
+        vim.schedule(function()
+          pcall(vim.fn.delete, handle.body_file)
+          if handle.cancelled then
+            return
+          end
+          if code ~= 0 then
+            emit({ type = "error", error = "curl failed: " .. table.concat(stderr, "\n") })
+          elseif not completed then
+            emit({ type = "done" })
+          end
+        end)
+      end,
+    })
+  end)
+
+  return handle
+end
+
 function M.complete(messages, callback)
   get_auth(function(auth, auth_err)
     if auth_err then

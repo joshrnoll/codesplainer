@@ -113,6 +113,41 @@ function M.append(lines)
   vim.api.nvim_win_set_cursor(state.winid, { line_count, 0 })
 end
 
+function M.prepare_response_body()
+  local bufnr = M.open()
+  local last = vim.api.nvim_buf_line_count(bufnr)
+  local line = vim.api.nvim_buf_get_lines(bufnr, last - 1, last, false)[1] or ""
+  set_modifiable(bufnr, true)
+  if line == "" then
+    vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, { "" })
+  else
+    vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, { "", "" })
+  end
+  set_modifiable(bufnr, false)
+end
+
+function M.append_text_delta(text)
+  if not text or text == "" then
+    return
+  end
+  local bufnr = M.open()
+  local parts = vim.split(text, "\n", { plain = true })
+  set_modifiable(bufnr, true)
+  local last = vim.api.nvim_buf_line_count(bufnr)
+  local current = vim.api.nvim_buf_get_lines(bufnr, last - 1, last, false)[1] or ""
+  vim.api.nvim_buf_set_lines(bufnr, last - 1, last, false, { current .. parts[1] })
+  if #parts > 1 then
+    local rest = {}
+    for index = 2, #parts do
+      table.insert(rest, parts[index])
+    end
+    vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, rest)
+  end
+  set_modifiable(bufnr, false)
+  local line_count = vim.api.nvim_buf_line_count(bufnr)
+  vim.api.nvim_win_set_cursor(state.winid, { line_count, #vim.api.nvim_buf_get_lines(bufnr, line_count - 1, line_count, false)[1] })
+end
+
 function M.remove_last_nonblank_matching(pattern)
   local bufnr = M.open()
   for row = vim.api.nvim_buf_line_count(bufnr), 1, -1 do

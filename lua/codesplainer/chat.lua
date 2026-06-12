@@ -1,6 +1,5 @@
-local config = require("codesplainer.config")
+local agent = require("codesplainer.agent")
 local lsp = require("codesplainer.lsp")
-local markdown = require("codesplainer.markdown")
 local window = require("codesplainer.window")
 
 local M = {}
@@ -21,16 +20,6 @@ local state = {
   messages = nil,
   busy = false,
 }
-
-local function provider()
-  if config.options.provider == "openai" then
-    return require("codesplainer.providers.openai")
-  end
-  if config.options.provider == "codex" then
-    return require("codesplainer.providers.codex")
-  end
-  error("Unknown provider: " .. tostring(config.options.provider))
-end
 
 local function ensure_messages()
   if not state.messages then
@@ -98,26 +87,6 @@ local function build_context_prompt(question, ctx)
   }, "\n")
 end
 
-local function parse_tool_call(text)
-  local body = text:match("```lsp%-tool%s*\n(.-)\n```") or text:match("```json%s*\n(.-)\n```")
-  if not body then
-    return nil
-  end
-  local ok, decoded = pcall(vim.fn.json_decode, body)
-  if ok and type(decoded) == "table" and decoded.tool then
-    return decoded
-  end
-  return nil
-end
-
-local function finish_response(answer)
-  table.insert(state.messages, { role = "assistant", content = answer })
-  window.remove_last_nonblank_matching("^_Thinking%.%.%_$")
-  window.append(markdown.format_lines(answer))
-  state.busy = false
-  window.start_prompt()
-end
-
 local function fail_response(err)
   window.remove_last_nonblank_matching("^_Thinking%.%.%_$")
   append_section("Error", { err })
@@ -125,28 +94,34 @@ local function fail_response(err)
   window.start_prompt()
 end
 
-local function request_round(round)
-  provider().complete(state.messages, function(answer, err)
-    if err then
-      fail_response(err)
+local function request_agent_response()
+  local response_started = false
+
+  local function ensure_response_started()
+    if response_started then
       return
     end
+    window.prepare_response_body()
+    response_started = true
+  end
 
-    local call = parse_tool_call(answer)
-    if not call or round >= config.options.max_tool_rounds then
-      finish_response(answer)
-      return
-    end
-
-    window.append({ "", "Model requested LSP tool:", "```json", vim.fn.json_encode(call), "```", "" })
-    local tool_result = lsp.run_tool(call)
-    table.insert(state.messages, { role = "assistant", content = answer })
-    table.insert(state.messages, {
-      role = "user",
-      content = "LSP tool result for " .. call.tool .. ":\n```\n" .. tool_result .. "\n```",
-    })
-    request_round(round + 1)
-  end)
+  agent.run(state.messages, {
+    on_text = function(text)
+      ensure_response_started()
+      window.append_text_delta(text)
+    end,
+    on_tool_call = function(call)
+      ensure_response_started()
+      window.append_text_delta(table.concat({ "```json", vim.fn.json_encode(call), "```" }, "\n"))
+      response_started = false
+    end,
+    on_done = function(answer)
+      table.insert(state.messages, { role = "assistant", content = answer })
+      state.busy = false
+      window.start_prompt()
+    end,
+    on_error = fail_response,
+  })
 end
 
 local function send_user_message(message, display_lines)
@@ -160,9 +135,9 @@ local function send_user_message(message, display_lines)
   if display_lines then
     append_section("You", display_lines)
   end
-  append_section("Codesplainer", { "_Thinking..._" })
+  append_section("Codesplainer", { "_Thinking..._", "" })
   state.busy = true
-  request_round(0)
+  request_agent_response()
 end
 
 function M.show()

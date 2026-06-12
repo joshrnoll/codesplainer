@@ -30,6 +30,15 @@ local function has_line(lines, target)
   return vim.tbl_contains(lines, target)
 end
 
+local function line_index(lines, target)
+  for index, line in ipairs(lines) do
+    if line == target then
+      return index
+    end
+  end
+  return nil
+end
+
 assert_true("Codesplainer command exists", vim.fn.exists(":Codesplainer") == 2)
 assert_true("CodesplainerAsk command exists", vim.fn.exists(":CodesplainerAsk") == 2)
 assert_true("CodesplainerClear command exists", vim.fn.exists(":CodesplainerClear") == 2)
@@ -49,6 +58,8 @@ vim.cmd("Codesplainer hello")
 local lines = buffer_lines()
 assert_true("assistant section labeled Codesplainer", has_line(lines, "## Codesplainer"))
 assert_true("assistant section not labeled Assistant", not has_line(lines, "## Assistant"))
+local thinking_index = line_index(lines, "_Thinking..._")
+assert_true("Thinking has one newline before response", thinking_index and lines[thinking_index + 1] == "" and lines[thinking_index + 2] == "stub response")
 
 vim.cmd("stopinsert")
 vim.cmd("Codesplainer")

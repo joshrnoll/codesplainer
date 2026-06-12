@@ -2,5 +2,7 @@
 
 test:
 	nvim --headless -u NONE -l tests/markdown_spec.lua
+	nvim --headless -u NONE -l tests/agent_spec.lua
+	nvim --headless -u NONE -l tests/window_spec.lua
 	nvim --headless -u NONE -l tests/command_spec.lua
 	nvim --headless -u NONE -l tests/visual_selection_spec.lua
