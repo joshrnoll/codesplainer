@@ -30,6 +30,15 @@ assert_equal("tool call and text blocks have consistent spacing", vim.api.nvim_b
   "final answer",
 })
 
+window.replace({ "# Codesplainer", "", "intro" })
+window.start_prompt()
+window.discard_empty_prompt()
+assert_equal("empty prompt can be discarded before explicit user section", vim.api.nvim_buf_get_lines(0, 0, -1, false), {
+  "# Codesplainer",
+  "",
+  "intro",
+})
+
 if failures > 0 then
   vim.cmd("cquit 1")
 end

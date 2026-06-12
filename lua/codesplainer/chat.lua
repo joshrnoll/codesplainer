@@ -133,6 +133,7 @@ local function send_user_message(message, display_lines)
 
   table.insert(state.messages, { role = "user", content = message })
   if display_lines then
+    window.discard_empty_prompt()
     append_section("You", display_lines)
   end
   append_section("Codesplainer", { "_Thinking..._", "" })

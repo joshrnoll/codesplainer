@@ -172,6 +172,34 @@ function M.start_prompt()
   vim.cmd("startinsert")
 end
 
+function M.discard_empty_prompt()
+  local bufnr = M.open()
+  if not state.input_start then
+    return false
+  end
+
+  local last = vim.api.nvim_buf_line_count(bufnr)
+  local input_lines = vim.api.nvim_buf_get_lines(bufnr, state.input_start - 1, last, false)
+  if vim.trim(table.concat(input_lines, "\n")) ~= "" then
+    return false
+  end
+
+  local prompt_start = state.input_start - 4
+  if prompt_start < 0 then
+    return false
+  end
+  local prompt_lines = vim.api.nvim_buf_get_lines(bufnr, prompt_start, state.input_start - 1, false)
+  if prompt_lines[1] ~= "" or prompt_lines[2] ~= "## You" or prompt_lines[3] ~= "" then
+    return false
+  end
+
+  set_modifiable(bufnr, true)
+  vim.api.nvim_buf_set_lines(bufnr, prompt_start, last, false, {})
+  set_modifiable(bufnr, false)
+  state.input_start = nil
+  return true
+end
+
 function M.finish_prompt()
   local bufnr = M.open()
   if not state.input_start then
